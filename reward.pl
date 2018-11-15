@@ -8,29 +8,29 @@ use IO::Handle qw( ); STDOUT->autoflush(1);
 $HELP=<<EOF;
 
 NAME
-    reward - reward simulator
+    reward - reward simulator for contextual bandits
 
 USAGE
     reward [OPTIONS] [TIMESTAMP] ACTION [CONTEXT]
     cat ACTIONS_FILE | reward [OPTIONS]
 
 DESCRIPTION
-    Reward returns the simulated reward for suplied action.
+    Reward provides "most" simple simulation of stochastic reward for
+    contextual bandits.
+
+    Reward returns the simulated reward for supplied action.
     It just chooses random value from the defined uniform distribution.
     Means of rewards provided for particular actions are linearly distributed.
     Context, if provided, defines further linear shift of these means.
 
-ACTION
-    The ACTION is the index number of the action chosen.
-
-CONTEXT
-    The CONTEXT is a space separated vector defining the context
-    of given dimensionality.
+    ACTION is the ID number of action to be rewarded.  Optional CONTEXT
+    is a space separated vector defining the context in which action was done.
+    TIMESTAMP can be also provided optionally.
 
 ACTIONS_FILE
-    Lines with space separated numbers.  First is the the action
-    number, followed by the context vector.  Empty lines or hash
-    comments are skipped.
+    Actions file or a stream are just lines with space separated numbers.
+    First is the the action number, followed by the context vector.
+    Empty lines or hash comments are skipped.
 
 OPTIONS
           -h  This help.
@@ -47,13 +47,16 @@ OPTIONS
     The mean of reward is shifted by the context.  The shift is between none to
     opposite (opposite distribution of means compare to no-context).
 
-         -cl  Linear context with every dimension equaly important CK((default).)
+         -cl  Linear context with every dimension equally important CK((default).)
          -cc  Cascading context with every next dimension less important.
 
 EXAMPLES
-    evgen | reward
-    evgen -c=3 20 | reward
-    reward 2 1 1
+    CW(reward 2 1 1)
+    CW(evgen | reward)
+    CW(evgen -c=3 20 | reward)
+
+    Full simulation loop:
+    CW(evgen -c=3 -f=log.dat | reward | context_bandit >> log.dat)
 
 EOF
 
