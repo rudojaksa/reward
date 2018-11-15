@@ -8,14 +8,14 @@ use IO::Handle qw( ); STDOUT->autoflush(1);
 $HELP=<<EOF;
 
 NAME
-    acrew - action reward simulator
+    reward - reward simulator
 
 USAGE
-    acrew [OPTIONS] [TIMESTAMP] ACTION [CONTEXT]
-    cat ACTIONS_FILE | acrew [OPTIONS]
+    reward [OPTIONS] [TIMESTAMP] ACTION [CONTEXT]
+    cat ACTIONS_FILE | reward [OPTIONS]
 
 DESCRIPTION
-    Acrew will return the simulated reward for given action.
+    Reward will return the simulated reward for given action.
     It will choose random value from particular distribution.
     Means of rewards are linearly distributed themselves.
     Context is a parametric linear shift of this distribution.
