@@ -29,8 +29,8 @@ DESCRIPTION
 
 ACTIONS_FILE
     Actions file or a stream are just lines with space separated numbers.
-    First is the the action number, followed by the context vector.
-    Empty lines or hash comments are skipped.
+    Optional ISO 8601 timestamp is followed by mandatory action ID, followed
+    by optional context vector.  Empty lines or hash comments are skipped.
 
 OPTIONS
           -h  This help.

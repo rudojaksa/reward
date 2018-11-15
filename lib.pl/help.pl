@@ -19,7 +19,7 @@ sub printhelp {
   $help =~ s/_DEBUG_\n/$helpdebug/;
   $help =~ s/_STRAINS_/$debug_strains/;
 
-  $help.="VERSION\n    $PACKAGE.$VERSION $COPYLEFT\n\n";
+  $help.="VERSION\n    $PACKAGE-$VERSION $COPYLEFT\n\n";
 
   # CC(text)
   $help =~ s/\\\)/__CLPA__/g; # use '\\)' instead of closing paren in the $HELP

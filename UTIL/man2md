@@ -1,8 +1,13 @@
 #!/usr/bin/perl
 # Copyleft: R.Jaksa 2018, GNU General Public License version 3
-# ------------------------------------------------------------------------- SUPPORT
 
-# colors
+$PACKAGE="man2md";
+$VERSION="0.1";
+$PROJECT="webutils";
+$COPYLEFT="(c) R.Jaksa 2018 GPLv3";
+
+# ---------------------------------------------------------------------- COLORS
+
 $CR_="\033[31m"; # color red
 $CG_="\033[32m"; # color green
 $CY_="\033[33m"; # color yellow
@@ -20,6 +25,10 @@ $CA_="\033[96m"; # color aqua cyan
 $CF_="\033[97m"; # color fluorescent white
 $CD_="\033[0m";  # color default
 
+# -----------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------------------- FUNCS
+
 # inar(\@a,$s) - check whether the string is in the array
 sub inar {
   my $a=$_[0]; # array ref
@@ -27,17 +36,122 @@ sub inar {
   foreach(@{$a}) { return 1 if $_ eq $s; }
   return 0; }
 
-# --------------------------------------------------------------------------- ARGVS
+# pushq(\@a,$s) - push unique, only if not there
+sub pushq {
+  my $a=$_[0]; # array ref
+  my $s=$_[1]; # string
+  return if inar $a,$s;
+  push @{$a},$s; }
 
-our $INPUT = $ARGV[0];
+# return file name from path
+sub fname {
+  my $fname = $_[0];
+  $fname =~ s/^.*\///;
+  return $fname; }
+# return directory part of path
+sub dirname { return $1 if $_[0] =~ /^(.*)\/[^\/]*$/; }
 
-die "not a file \"$INPUT\"" if not -f $INPUT;
+# writefile
+sub writefile {
+  my $file = $_[0];
+  my $s    = $_[1];
+  my $dir  = dirname $file;
+  mkdir $dir if not -d $dir;
+  open(O,">$file") or die "Can't create file $CG_$file$CD_ $CR_($!)$CD_."; 
+  print O $s;
+  close(O); }
 
-# --------------------------------------------------------------------------- INPUT
+# read the first line
+sub firstline {
+  my $file = $_[0];
+  my $s;
+  open(FILE,"<$file") or die "Can't read file $CG_$file$CD_ $CR_($!)$CD_."; 
+  $s = <FILE>;
+  close(FILE);
+  return $s; }
 
-$RAW = `cat $INPUT`;
+# ---------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------ HELP
+my $helpdebug=<<EOF;
+DEBUG
+    Debug messages can be switched on/off by strains.
+    Available strains are:
+    ${CC_}_STRAINS_$CD_.
 
-# ------------------------------------------------------------------- PREPROCESSING
+    $CC_-d STRAIN$CC_\[,STRAIN...\]$CD_ Debug only specified strains.
+    $CC_-d -STRAIN$CD_ Prefix the strain with "-" to avoid it.
+EOF
+# -----------------------------------------------------------------------------------------
+
+sub printhelp {
+  my $help = $_[0];
+  my $PR = qr/(\(((?:[^()]|(?-2))*)\))/x;
+
+#  my $debug_strains = debug_strains_list();
+#  $debug_strains =~ s/, /$CD_, $CC_/g;
+  $help =~ s/_DEBUG_\n/$helpdebug/;
+  $help =~ s/_STRAINS_/$debug_strains/;
+
+  $help.="VERSION\n    $PACKAGE-$VERSION $COPYLEFT\n\n";
+
+  # CC(text)
+  $help =~ s/\\\)/__CLPA__/g; # use '\\)' instead of closing paren in the $HELP
+  $help =~ s/([^A-Z0-9])CC$PR/$1$CC_$3$CD_/g;
+  $help =~ s/([^A-Z0-9])CW$PR/$1$CW_$3$CD_/g;
+  $help =~ s/([^A-Z0-9])CK$PR/$1$CK_$3$CD_/g;
+  $help =~ s/([^A-Z0-9])CD$PR/$1$CD_$3$CD_/g;
+  $help =~ s/__CLPA__/)/g;
+
+  # TODO: use push array to avoid being overwritten later
+  $help =~ s/(\n[ ]*)(-[a-zA-Z0-9]+(\[?[ =][A-Z]{2,}(x[A-Z]{2,})?\]?)?)([ \t])/$1$CC_$2$CD_$5/g;
+
+  $help =~ s/\[([+-])?([A-Z]+)\]/\[$1$CC_$2$CD_\]/g;
+  $help =~ s/(\n|[ \t])(([A-Z_\/-]+[ ]?){4,})/$1$CC_$2$CD_/g;
+
+  print $help; }
+
+# -----------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------- HELP
+
+$HELP=<<EOF;
+
+NAME
+    man2md - man to (github) markdown convertor
+
+USAGE
+    man topic > topic.txt
+    man2md topic.txt > topic.md
+
+    or:
+    man topic | man2md
+
+DESCRIPTION
+    Man2md just converts manpage or an interactive help, if it is man-like
+    formatted, into the markdown format suitable for the github README.md.
+
+OPTIONS
+    -h  This help.
+
+EOF
+
+# ------------------------------------------------------------------------------ ARGVS
+foreach(@ARGV) { if($_ eq "-h") { printhelp $HELP; exit 0; }}
+
+our $INPUT;
+foreach(@ARGV) {
+  next if $_ eq "";
+  if(-f $_) { $INPUT=$_; $_=""; last; }}
+
+# ------------------------------------------------------------------------------ INPUT
+
+if(defined $INPUT) {
+  $RAW = `cat $INPUT`; }
+
+else {
+  while(<STDIN>) {
+    $RAW .= "$_"; }}
+
+# ---------------------------------------------------------------------- PREPROCESSING
 
 # remove color escape sequences
 $RAW =~ s/\033\[36m//g;	# cyan
@@ -52,7 +166,7 @@ $RAW =~ s/\n([A-Za-z0-9-]+(\h+[A-Za-z0-9-]+)?(\h+[A-Za-z0-9-]+)?:)/\n\#\#\#\# $1
 # multiple newlines
 $RAW =~ s/\n\h*\n\h*(\n\h*)+/\n\n/g;
 
-# ------------------------------------------------------------------ SPLIT SECTIONS
+# --------------------------------------------------------------------- SPLIT SECTIONS
 
 # split into sections
 our @HEAD; # header text
@@ -78,7 +192,7 @@ foreach my $s (split /\n/,$RAW) {
 addsec $head,$hdpx,$body if defined $head and defined $body;
 # print "$_\n$BODY{$_}" foreach @HEAD; exit 1;
 
-# ------------------------------------------------------------------ SECTIONS TYPES
+# --------------------------------------------------------------------- SECTIONS TYPES
 
 # list of sections always treated as regular
 $REG=<<EOF;
@@ -111,7 +225,7 @@ foreach my $h (@HEAD) {
   else { $TYPE{$h}=1; }} # default regular
 # print "$_ $TYPE{$_}\n" foreach @HEAD;
 
-# -------------------------------------------------------------- INDENTATION PREFIX
+# ----------------------------------------------------------------- INDENTATION PREFIX
 
 my $ind = 1000; # total minimal indentation level
 foreach my $h (@HEAD) {
@@ -126,7 +240,7 @@ my $px = ""; # required prefix to maintain minimal indentatiot to be four
 for(my $i=0; $i<4-$ind; $i++) { $px.=" "; }
 # print "max ind: $ind\n";
 
-# ----------------------------------------------------------------- ASSEMBLE OUTPUT
+# -------------------------------------------------------------------- ASSEMBLE OUTPUT
 
 our $OUT; # output string
 foreach my $h (@HEAD) {
@@ -149,12 +263,8 @@ foreach my $h (@HEAD) {
 
   $OUT .= "\n"; }
 
-# -------------------------------------------------------------------------- OUTPUT
+# ----------------------------------------------------------------------------- OUTPUT
 
-# add final newline
-$OUT .= "\n";
-
-# print output
 print "$OUT";
 
-# ---------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------

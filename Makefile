@@ -23,8 +23,6 @@ push: all
 mrproper: clean
 	rm -fv README.md
 
-TMP := /tmp/man2md.tmp
 README.md: $(BIN)
-	$< -h > $(TMP)
-	man2md $(TMP) > $@
+	$< -h | man2md > $@
 

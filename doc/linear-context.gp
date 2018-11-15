@@ -1,4 +1,4 @@
-set terminal pngcairo enhanced size 940,400 font 'Noto Mono,13' rounded
+set terminal pngcairo enhanced size 950,400 font 'Noto Mono,13' rounded
 set output 'linear-context.png'
 set border linewidth 1.3
 
@@ -16,7 +16,7 @@ print sprintf("a0=%.2f an=%.2f ad=%.2f",a0,an,ad)
 set xrange [a0:an]
 set yrange [-0.1:1.3]
 set key center top
-set title "linear context-shift equations      r0=0  rn=1     a0=1  an=7     rd=rn-r0  ad=an-a0"
+set title "linear context-shift expressions      r0=0  rn=1     a0=1  an=7     rd=rn-r0  ad=an-a0"
 
 plot \
  1.0*rd/ad*(x-a0)+r0+rd*0.00 lw 2 lc rgb '#F00000',\
