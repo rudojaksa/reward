@@ -1,11 +1,10 @@
-   
 ### NAME
 reward - reward simulator
 
 ### USAGE
        reward [OPTIONS] [TIMESTAMP] ACTION [CONTEXT]
        cat ACTIONS_FILE | reward [OPTIONS]
-   
+
 ### DESCRIPTION
 Reward returns the simulated reward for suplied action.
 It just chooses random value from the defined uniform distribution.
@@ -13,17 +12,17 @@ Means of rewards provided for particular actions are linearly distributed.
 Context, if provided, defines further linear shift of these means.
 
 ### ACTION
-       The ACTION is the index number of the action chosen.
-   
+The ACTION is the index number of the action chosen.
+
 ### CONTEXT
-       The CONTEXT is a space separated vector defining the context
-       of given dimensionality.
-   
+The CONTEXT is a space separated vector defining the context
+of given dimensionality.
+
 ### ACTIONS_FILE
-       Lines with space separated numbers.  First is the the action
-       number, followed by the context vector.  Empty lines or hash
-       comments are skipped.
-   
+Lines with space separated numbers.  First is the the action
+number, followed by the context vector.  Empty lines or hash
+comments are skipped.
+
 ### OPTIONS
              -h  This help.
              -v  Verbose execution using STDERR.
@@ -37,11 +36,17 @@ Context, if provided, defines further linear shift of these means.
     -ci=NUM,NUM  Interval of context values (default [0,Context_states-1]).
    
        The mean of reward is shifted by the context.  The shift is between none to
-       opposite (opposite distribution of means as without the context).
+       opposite (opposite distribution of means compare to no-context).
    
             -cl  Linear context with every dimension equaly important (default).
             -cc  Cascading context with every next dimension less important.
-   
+
+### EXAMPLES
+       evgen | reward
+       evgen -c=3 20 | reward
+       reward 2 1 1
+
 ### VERSION
 reward.0.2 (c) R.Jaksa 2018 GPLv3
+
 

@@ -52,8 +52,35 @@ $RAW =~ s/\n([A-Za-z0-9-]+(\h+[A-Za-z0-9-]+)?(\h+[A-Za-z0-9-]+)?:)/\n\#\#\#\# $1
 # multiple newlines
 $RAW =~ s/\n\h*\n\h*(\n\h*)+/\n\n/g;
 
-# ------------------------------------------------------------------------ SECTIONS
+# ------------------------------------------------------------------ SPLIT SECTIONS
 
+# split into sections
+our @HEAD; # header text
+our %HDPX; # header prefix
+our %BODY; # section body
+sub addsec { push @HEAD,$_[0]; $HDPX{$_[0]} = $_[1]; $BODY{$_[0]} = $_[2]; }
+
+my $head; # current header
+my $hdpx; # header prefix
+my $body; # current body
+foreach my $s (split /\n/,$RAW) {
+
+  # header => store past section
+  if($s =~ /^(\#\#*) (.*)\h*$/) {
+    addsec $head,$hdpx,$body and undef $body if defined $head and defined $body;
+    $head = $2;
+    $hdpx = $1; }
+
+  # just line
+  else {
+    $body .= "$s\n" if defined $head; }} # store the body only for recognized head
+
+addsec $head,$hdpx,$body if defined $head and defined $body;
+# print "$_\n$BODY{$_}" foreach @HEAD; exit 1;
+
+# ------------------------------------------------------------------ SECTIONS TYPES
+
+# list of sections always treated as regular
 $REG=<<EOF;
 NAME
 DESCRIPTION
@@ -64,60 +91,70 @@ COPYRIGHT
 SEE ALSO
 EOF
 
-our @REG = split /\n/,$REG; # regular sections
-our @PRE; # preformated sections (the rest)
+# list of sections always treated as preformatted
+$PRE=<<EOF;
+USAGE
+OPTIONS
+SYNOPSIS
+EXAMPLES
+EXAMPLE
+EOF
 
-my $hdr; # current header
+our @REG = split /\n/,$REG;
+our @PRE = split /\n/,$PRE;
+
+our %TYPE; # 1=REG 2=PRE
+foreach my $h (@HEAD) {
+  if(inar \@REG,$h) { $TYPE{$h}=1; } # always regular
+  elsif(inar \@PRE,$h) { $TYPE{$h}=2; } # always preformatted
+  elsif($BODY{$h}=~/(^|\n)\h*-[a-zA-Z0-9]/) { $TYPE{$h}=2; } # seems, list of options included
+  else { $TYPE{$h}=1; }} # default regular
+# print "$_ $TYPE{$_}\n" foreach @HEAD;
+
+# -------------------------------------------------------------- INDENTATION PREFIX
+
 my $ind = 1000; # total minimal indentation level
-foreach my $s (split /\n/,$RAW) {
-
-  # header
-  if($s =~ /^\#\#* (.*)\h*$/) {
-    $hdr = $1;
-    push @PRE,$hdr if not inar \@REG,$hdr; } # store PRE headers names
-  
-  # regular sections line
-  elsif(inar \@REG,$hdr) {}
-
-  # preformated sections line
-  elsif($s =~ /^\h*$/) {} # skip empty lines
-  else {
+foreach my $h (@HEAD) {
+  next if not $TYPE{$h} == 2;
+  foreach my $s (split /\n/,$BODY{$h}) {
+    next if $s =~ /^\h*$/; # skip empty lines
     if($s =~ /^( *)/) {
       my $len = length $1;
       $ind = $len if $len < $ind; }}}
 
-# --------------------------------------------------------------------- PREFORMATED
-
 my $px = ""; # required prefix to maintain minimal indentatiot to be four
 for(my $i=0; $i<4-$ind; $i++) { $px.=" "; }
+# print "max ind: $ind\n";
 
-my $out; # output string
-my $sp; # indentation space for current regular section
-undef $hdr;
-foreach my $s (split /\n/,$RAW) {
+# ----------------------------------------------------------------- ASSEMBLE OUTPUT
+
+our $OUT; # output string
+foreach my $h (@HEAD) {
 
   # header
-  if($s =~ /^\#\#* (.*)\h*$/) {
-    $hdr = $1;
-    $out .= "$s\n";
-    if(inar \@REG,$hdr) {
-      if($RAW =~ /\#\#* $hdr\n( *)[^ ]/) { $sp = $1; }}}
+  $OUT .= "$HDPX{$h} $h\n";
 
-  # regular sections line
-  elsif(inar \@REG,$hdr) {
-    $s =~ s/^$sp//;
-    $out .= "$s\n"; }
-    
-  # regular sections line
-  else {
-    $out .= "$px$s\n"; }}
+  # regular text
+  if($TYPE{$h} == 1) {
+    my $sp; # indentation space in current regular section input
+    foreach my $s (split /\n/,$BODY{$h}) {
+      $sp = $1 if not defined $sp and $s=~/^( *)[^ ]/; # only for 1st line
+      $s =~ s/^$sp//; # remove indentation here
+      $OUT .= "$s\n"; }}
+      
+  # preformatted text
+  elsif($TYPE{$h} == 2) {
+    foreach my $s (split /\n/,$BODY{$h}) {
+      $OUT .= "$px$s\n"; }}
+
+  $OUT .= "\n"; }
 
 # -------------------------------------------------------------------------- OUTPUT
 
 # add final newline
-$out .= "\n";
+$OUT .= "\n";
 
 # print output
-print "$out";
+print "$OUT";
 
 # ---------------------------------------------------------------------------------

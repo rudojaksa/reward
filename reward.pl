@@ -45,10 +45,15 @@ OPTIONS
  CC(-ci=NUM,NUM)  Interval of context values CK((default [0,Context_states-1]).)
 
     The mean of reward is shifted by the context.  The shift is between none to
-    opposite (opposite distribution of means as without the context).
+    opposite (opposite distribution of means compare to no-context).
 
          -cl  Linear context with every dimension equaly important CK((default).)
          -cc  Cascading context with every next dimension less important.
+
+EXAMPLES
+    evgen | reward
+    evgen -c=3 20 | reward
+    reward 2 1 1
 
 EOF
 
@@ -105,8 +110,8 @@ sub parse {
   foreach my $s (split /\s+/,$line) {
     $n++;
     next if $n==1 and $s =~ /^[0-9]+-[0-9]+-[0-9]+$/;	 # date on 1st field
-    next if $n==1 and $s =~ /^[0-9]+:[0-9]+(:[0-9]+)?$/; # time on 1st field
-    next if $n==2 and $s =~ /^[0-9]+:[0-9]+(:[0-9]+)?$/; # time on 2nd field
+    next if $n==1 and $s =~ /^[0-9]+:[0-9]+(:[0-9]+)?(\.[0-9]+)?$/; # time on 1st field
+    next if $n==2 and $s =~ /^[0-9]+:[0-9]+(:[0-9]+)?(\.[0-9]+)?$/; # time on 2nd field
     $a=$s and next if not defined $a and isnum $s;
     push @c,$s and next if isnum $s;
     error "wrong field: $s"; }
@@ -147,7 +152,7 @@ my $gottime;
 foreach(@ARGV) {
   next if $_ eq "";
   $LINE.="$_ " and $gotdate=1 and $_="" if not defined $gotdate and $_ =~ /^[0-9]+-[0-9]+-[0-9]+$/;
-  $LINE.="$_ " and $gottime=1 and $_="" if not defined $gottime and $_ =~ /^[0-9]+:[0-9]+(:[0-9]+)?$/;
+  $LINE.="$_ " and $gottime=1 and $_="" if not defined $gottime and $_ =~ /^[0-9]+:[0-9]+(:[0-9]+)?(\.[0-9]+)?$/;
   $LINE.="$_ " and $_="" if isnum $_; }
 
 # wrong arguments
@@ -370,7 +375,6 @@ if(defined $LINE) {
 # ---------------------------------------------------------------------- STREAMING RUN
 
 if(not defined $LINE) {
-
   while(<STDIN>) {
     my $s = $_;
     $s =~ s/\n$//;
@@ -388,8 +392,6 @@ if(not defined $LINE) {
       my ($a,@c) = parse $s;
       my $r = reward $a,\@c;
       print "$s $r\n"; }
-    print "\n" if not $_=~/\n$/; }
-
-}
+    print "\n" if not $_=~/\n$/; }}
 
 # -------------------------------------------------------------------------------- END
