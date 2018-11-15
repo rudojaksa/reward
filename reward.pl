@@ -15,8 +15,8 @@ USAGE
     cat ACTIONS_FILE | reward [OPTIONS]
 
 DESCRIPTION
-    Reward will return the simulated reward for given action.
-    It will choose random value from particular distribution.
+    Reward will return the simulated reward for suplied action.
+    It will choose random value from uniform distribution.
     Means of rewards are linearly distributed themselves.
     Context is a parametric linear shift of this distribution.
 
