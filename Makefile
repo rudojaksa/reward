@@ -14,7 +14,8 @@ install: all
 clean:
 	rm -fv $(BIN)
 
-push: clean
+push: all
+	make clean
 	git add .
 	git commit -m update
 	git push -f origin master
