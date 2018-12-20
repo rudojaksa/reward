@@ -35,6 +35,8 @@ ACTIONS_FILE
 OPTIONS
           -h  This help.
           -v  Verbose execution using CD(STDERR).
+         -vw  Vowpal Wabbit output format.
+
       -a=NUM  Number of possible actions CK((default 2: action 1 and action 2).)
       -r=NUM  Number of possible rewards CK((default 2: 0 and 1).)
   CC(-i=NUM,NUM)  Interval of reward values CK((default [0,No_of_rewards-1]).)
@@ -129,6 +131,7 @@ foreach(@ARGV) { if($_ eq "-v") { $VERBOSE=1; $_=""; last; }}
 foreach(@ARGV) { if($_ eq "-d") { $DEBUG=1; $_=""; last; }}
 foreach(@ARGV) { if($_ eq "-cl") { $CTYPE=1; $_=""; last; }}
 foreach(@ARGV) { if($_ eq "-cc") { $CTYPE=2; $_=""; last; }}
+foreach(@ARGV) { if($_ eq "-vw") { $VW=1; $_=""; last; }}
 
 our $ACTIONS = 2;
 our  $SPREAD = 2;
@@ -387,14 +390,17 @@ if(not defined $LINE) {
 
     # comments
     elsif($s =~ /^\h*\#/) {
-      print "$s r1\n";
+      print "$s r1\n" if not $VW;
       next; }
 
     # data
     else {
       my ($a,@c) = parse $s;
       my $r = reward $a,\@c;
-      print "$s $r\n"; }
+      if($VW) {
+	print "$a:$r:1 | @c\n"; }
+      else {
+	print "$s $r\n"; }}
     print "\n" if not $_=~/\n$/; }}
 
 # -------------------------------------------------------------------------------- END

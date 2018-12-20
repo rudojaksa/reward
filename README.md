@@ -26,6 +26,8 @@ by optional context vector.  Empty lines or hash comments are skipped.
 ### OPTIONS
              -h  This help.
              -v  Verbose execution using STDERR.
+            -vw  Vowpal Wabbit output format.
+   
          -a=NUM  Number of possible actions (default 2: action 1 and action 2).
          -r=NUM  Number of possible rewards (default 2: 0 and 1).
      -i=NUM,NUM  Interval of reward values (default [0,No_of_rewards-1]).
